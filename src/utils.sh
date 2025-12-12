@@ -50,7 +50,7 @@ clean_branch_name() {
   debug "branch before cleanup: $1"
   echo "$1" | \
     # Strip remote prefixes
-    sed 's/^[^\/]*\///' | \
+    sed -E 's/(origin|remotes|upstream)\///' | \
     # Remove trailing spaces
     sed 's/[[:space:]]*$//' | \
     # Replace spaces with hyphens
