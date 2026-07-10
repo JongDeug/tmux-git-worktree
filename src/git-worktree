@@ -19,6 +19,8 @@ split_pane_key=$(get_option_value "@git-worktree-split-pane-key" "ctrl-s")
 # Action taken on a plain Enter: new-window (default), split-pane or switch-pane.
 default_action=$(get_option_value "@git-worktree-default-action" "new-window")
 split_direction=$(get_option_value "@git-worktree-split-direction" "h")
+# Optional command to run in the opened window/pane (empty = just a shell).
+run_command=$(get_option_value "@git-worktree-run-command" "")
 time_to_live=$(get_option_value "@git-worktree-ttl" "2")
 
 debug "ignore_list: $ignore_list"
@@ -64,12 +66,22 @@ debug "Worktree after bare repo check: $directory"
 open_in_tmux() {
   local abs_dir="$1"
   local win_name="$2"
+  local new_pane
   if [[ "$open_action" == "switch-pane" ]]; then
     tmux send-keys "cd \"$abs_dir\" && clear" Enter
+    return
   elif [[ "$open_action" == "split-pane" ]]; then
-    check_condition_and_error_on_fail '! tmux split-window "-$split_direction" -c "$abs_dir"' 'Failed to split pane'
+    new_pane=$(tmux split-window "-$split_direction" -c "$abs_dir" -P -F '#{pane_id}')
+    check_condition_and_error_on_fail '[[ -z "$new_pane" ]]' 'Failed to split pane'
   else
-    check_condition_and_error_on_fail '! tmux new-window -c "$abs_dir" -n "$win_name"' 'Failed to create tmux window'
+    new_pane=$(tmux new-window -c "$abs_dir" -n "$win_name" -P -F '#{pane_id}')
+    check_condition_and_error_on_fail '[[ -z "$new_pane" ]]' 'Failed to create tmux window'
+  fi
+
+  # Optionally run a command in the freshly opened window/pane
+  # (e.g. @git-worktree-run-command "claude").
+  if [[ -n "$run_command" ]]; then
+    tmux send-keys -t "$new_pane" "$run_command" Enter
   fi
 }
 

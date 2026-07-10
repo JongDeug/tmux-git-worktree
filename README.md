@@ -75,6 +75,10 @@ set -g @git-worktree-switch-pane-key "alt-enter" # cd the current pane
 
 # Split orientation used by split-pane: h (left/right) or v (top/bottom)
 set -g @git-worktree-split-direction "h"        # Default is h
+
+# Optionally run a command in the opened window/pane (empty = just a shell).
+# Handy for dropping straight into an editor or agent per worktree.
+set -g @git-worktree-run-command "nvim"         # Default is empty
 ```
 
 ## Development
